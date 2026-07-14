@@ -27,10 +27,23 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     fetch(request)
-      .then((response) => {
-        const copy = response.clone();
+      .then(async (response) => {
+        // Chromium refuses to let a service worker respondWith() a *redirected*
+        // response for a navigation request ("A ServiceWorker passed a redirected
+        // response to respondWith() for a navigate request") — e.g. "/" redirecting
+        // to "/dashboard". Rebuild an equivalent, non-redirected Response so the
+        // navigation completes normally instead of failing with a generic error.
+        const finalResponse = response.redirected
+          ? new Response(await response.blob(), {
+              status: response.status,
+              statusText: response.statusText,
+              headers: response.headers,
+            })
+          : response;
+
+        const copy = finalResponse.clone();
         caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        return response;
+        return finalResponse;
       })
       .catch(async () => {
         const cached = await caches.match(request);

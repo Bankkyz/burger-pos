@@ -4,6 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "storage": {
+    "bucket": "nhewnhai.firebasestorage.app",
     "rules": "storage.rules"
   },
   "emulators": {
