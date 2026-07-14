@@ -85,7 +85,9 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
 
   const purchasePrice = watch("purchasePrice");
   const purchaseUnitGrams = watch("purchaseUnitGrams");
+  const watchedUnit = watch("unit");
   const previewCostPerGram = calcCostPerGram(Number(purchasePrice) || 0, Number(purchaseUnitGrams) || 0);
+  const unitLabel = t.ingredients.units[watchedUnit] ?? watchedUnit;
 
   async function onSubmit(values: FormValues) {
     const payload = {
@@ -152,7 +154,7 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
             {...register("purchasePrice", { valueAsNumber: true })}
           />
           <Input
-            label={t.ingredients.fieldPurchaseSize}
+            label={t.ingredients.fieldPurchaseSize(unitLabel)}
             type="number"
             step="0.01"
             min={0}
@@ -162,7 +164,7 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
         </div>
 
         <div className="rounded-[var(--radius-md)] bg-[var(--color-surface-2)] px-4 py-3 text-sm text-[var(--color-text-muted)]">
-          {t.ingredients.costPerGramPreview}{" "}
+          {t.ingredients.costPerGramPreview(unitLabel)}{" "}
           <span className="font-semibold text-[var(--color-text)]">{formatCurrency(previewCostPerGram)}</span>
         </div>
 
