@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/Select";
 import { EXPENSE_CATEGORIES } from "@/constants";
 import { expensesService } from "@/services/expensesService";
 import type { Expense } from "@/types";
+import { toLocalDateString } from "@/utils/dateOnly";
 import { toast } from "@/utils/toast";
 
 const schema = z.object({
@@ -23,7 +24,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 function today(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalDateString(new Date());
 }
 
 export interface ExpenseFormModalProps {

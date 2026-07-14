@@ -9,6 +9,7 @@ import { COLLECTIONS } from "@/constants";
 import { db } from "@/lib/firebase/config";
 import { makeConverter } from "@/lib/firebase/firestore";
 import type { Ingredient, Sale, SaleItem } from "@/types";
+import { toLocalDateString } from "@/utils/dateOnly";
 
 const salesCollection = collection(db, COLLECTIONS.SALES).withConverter(makeConverter<Sale>());
 const saleItemsCollection = collection(db, COLLECTIONS.SALE_ITEMS).withConverter(makeConverter<SaleItem>());
@@ -90,7 +91,7 @@ export function subscribeMonthlyRevenue(
         .map((d) => d.data())
         .filter((s) => s.status === "completed")
         .forEach((sale) => {
-          const key = new Date(sale.createdAt).toISOString().slice(0, 10);
+          const key = toLocalDateString(new Date(sale.createdAt));
           const existing = byDay.get(key) ?? { date: key, revenue: 0, cost: 0, profit: 0 };
           existing.revenue += sale.total;
           existing.cost += sale.totalCost;

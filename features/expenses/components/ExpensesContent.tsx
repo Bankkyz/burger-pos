@@ -13,6 +13,7 @@ import { ExpensesTable } from "@/features/expenses/components/ExpensesTable";
 import { useExpenses } from "@/features/expenses/hooks/useExpenses";
 import { expensesService } from "@/services/expensesService";
 import type { Expense } from "@/types";
+import { toLocalDateString } from "@/utils/dateOnly";
 import { formatCurrency } from "@/utils/format";
 import { toast } from "@/utils/toast";
 
@@ -24,7 +25,7 @@ export function ExpensesContent() {
   const [deleting, setDeleting] = useState(false);
 
   const monthTotal = useMemo(() => {
-    const currentMonth = new Date().toISOString().slice(0, 7);
+    const currentMonth = toLocalDateString(new Date()).slice(0, 7);
     return expenses.filter((e) => e.date.startsWith(currentMonth)).reduce((sum, e) => sum + e.amount, 0);
   }, [expenses]);
 
