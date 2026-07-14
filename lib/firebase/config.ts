@@ -1,6 +1,13 @@
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
 import { type Auth, connectAuthEmulator, getAuth } from "firebase/auth";
-import { connectFirestoreEmulator, type Firestore, getFirestore } from "firebase/firestore";
+import {
+  connectFirestoreEmulator,
+  type Firestore,
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+} from "firebase/firestore";
 import { connectStorageEmulator, type FirebaseStorage, getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -24,7 +31,24 @@ export const firebaseApp: FirebaseApp = createFirebaseApp();
 // to defer real initialization to the browser and hand back a stub during SSR/build.
 export const auth: Auth =
   typeof window !== "undefined" ? getAuth(firebaseApp) : ({} as Auth);
-export const db: Firestore = getFirestore(firebaseApp);
+
+// Persistent (IndexedDB-backed) local cache lets the app read/write while
+// offline; queued writes sync automatically once connectivity returns. Only
+// meaningful in the browser (no IndexedDB during SSR/build), and `initializeFirestore`
+// throws if this module re-evaluates on the same app (e.g. Next.js Fast Refresh) —
+// fall back to the already-initialized instance in that case.
+function createFirestoreInstance(app: FirebaseApp): Firestore {
+  if (typeof window === "undefined") return getFirestore(app);
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
+    });
+  } catch {
+    return getFirestore(app);
+  }
+}
+
+export const db: Firestore = createFirestoreInstance(firebaseApp);
 export const storage: FirebaseStorage = getStorage(firebaseApp);
 
 // Local development against the Firebase Emulator Suite (`firebase emulators:start`).

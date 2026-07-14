@@ -10,10 +10,21 @@ service cloud.firestore {
         && request.auth.token.email.lower() == "admin@burgerpos.com";
     }
 
-    // Every collection in this system is only readable/writable by the single
-    // admin account. There is no multi-tenant or public-facing data.
-    match /{document=**} {
-      allow read, write: if isAdmin();
-    }
+    // Explicit per-collection matches (rather than a single {document=**}
+    // wildcard) so access is scoped to exactly the collections this app
+    // uses — anything else is denied by Firestore's default-deny, not by a
+    // catch-all rule that would also cover future/misspelled collections.
+    match /users/{userId} { allow read, write: if isAdmin(); }
+    match /ingredients/{ingredientId} { allow read, write: if isAdmin(); }
+    match /recipes/{recipeId} { allow read, write: if isAdmin(); }
+    match /recipeItems/{itemId} { allow read, write: if isAdmin(); }
+    match /sales/{saleId} { allow read, write: if isAdmin(); }
+    match /saleItems/{itemId} { allow read, write: if isAdmin(); }
+    match /expenses/{expenseId} { allow read, write: if isAdmin(); }
+    match /purchases/{purchaseId} { allow read, write: if isAdmin(); }
+    match /purchaseItems/{itemId} { allow read, write: if isAdmin(); }
+    match /suppliers/{supplierId} { allow read, write: if isAdmin(); }
+    match /settings/{settingsId} { allow read, write: if isAdmin(); }
+    match /logs/{logId} { allow read, write: if isAdmin(); }
   }
 }

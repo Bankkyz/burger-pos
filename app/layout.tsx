@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { PwaRegister } from "@/components/PwaRegister";
 import { AuthProvider } from "@/features/auth/hooks/useAuth";
 import "./globals.css";
 
@@ -27,6 +28,13 @@ export const metadata: Metadata = {
     capable: true,
     statusBarStyle: "default",
     title: "Burger POS",
+  },
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
   },
 };
 
@@ -53,6 +61,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <AuthProvider>
             <ErrorBoundary>{children}</ErrorBoundary>
             <Toaster richColors position="top-right" theme="system" />
+            <PwaRegister />
           </AuthProvider>
         </ThemeProvider>
       </body>
