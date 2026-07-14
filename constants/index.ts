@@ -61,6 +61,3 @@ export const SALE_CHANNELS = [
 export const ORDER_STATUS = ["open", "completed", "voided"] as const;
 
 export const STOCK_MOVEMENT_TYPES = ["purchase", "sale", "adjustment"] as const;
-
-/** Stock is "low" when currentStock <= minimumStock but still > 0. */
-export const LOW_STOCK_THRESHOLD_RATIO = 1;
