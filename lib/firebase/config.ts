@@ -1,7 +1,7 @@
 import { type FirebaseApp, getApps, initializeApp } from "firebase/app";
-import { type Auth, getAuth } from "firebase/auth";
-import { type Firestore, getFirestore } from "firebase/firestore";
-import { type FirebaseStorage, getStorage } from "firebase/storage";
+import { type Auth, connectAuthEmulator, getAuth } from "firebase/auth";
+import { connectFirestoreEmulator, type Firestore, getFirestore } from "firebase/firestore";
+import { connectStorageEmulator, type FirebaseStorage, getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -26,3 +26,20 @@ export const auth: Auth =
   typeof window !== "undefined" ? getAuth(firebaseApp) : ({} as Auth);
 export const db: Firestore = getFirestore(firebaseApp);
 export const storage: FirebaseStorage = getStorage(firebaseApp);
+
+// Local development against the Firebase Emulator Suite (`firebase emulators:start`).
+// Guarded against Next.js Fast Refresh re-running this module and reconnecting twice.
+declare global {
+  var __firebaseEmulatorsConnected: boolean | undefined;
+}
+
+if (
+  typeof window !== "undefined" &&
+  process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true" &&
+  !globalThis.__firebaseEmulatorsConnected
+) {
+  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectStorageEmulator(storage, "127.0.0.1", 9199);
+  globalThis.__firebaseEmulatorsConnected = true;
+}

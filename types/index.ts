@@ -63,8 +63,8 @@ export interface Recipe extends BaseDoc {
   name: string;
   category?: string;
   imageUrl?: string | null;
-  items: RecipeItem[];
-  cost: number; // sum of item costs
+  // Line items live in the `recipeItems` collection, keyed by recipeId.
+  cost: number; // sum of item costs, denormalized for fast reads
   sellingPrice: number;
   profit: number; // sellingPrice - cost
   margin: number; // profit / sellingPrice
@@ -82,11 +82,13 @@ export interface SaleItem {
   lineTotal: number;
   lineCost: number;
   lineProfit: number;
+  createdAt: number; // denormalized from the parent sale, enables date-range queries
 }
 
 export interface Sale extends BaseDoc {
   orderNumber: string;
-  items: SaleItem[];
+  // Line items live in the `saleItems` collection, keyed by saleId.
+  itemCount: number;
   subtotal: number;
   discount: number;
   serviceCharge: number;
@@ -108,12 +110,14 @@ export interface PurchaseItem {
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  createdAt: number; // denormalized from the parent purchase, enables date-range queries
 }
 
 export interface Purchase extends BaseDoc {
   supplierId: string;
   supplierName: string;
-  items: PurchaseItem[];
+  // Line items live in the `purchaseItems` collection, keyed by purchaseId.
+  itemCount: number;
   total: number;
   note?: string;
 }
