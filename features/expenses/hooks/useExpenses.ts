@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { expensesService } from "@/services/expensesService";
 import type { Expense } from "@/types";
 import { toast } from "@/utils/toast";
 
 export function useExpenses() {
+  const { t } = useLanguage();
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,11 +19,11 @@ export function useExpenses() {
       },
       (error) => {
         console.error("[expenses]", error);
-        toast.error("Failed to load expenses.");
+        toast.error(t.expenses.toastLoadFailed);
       },
     );
     return unsub;
-  }, []);
+  }, [t]);
 
   return { expenses, loading };
 }

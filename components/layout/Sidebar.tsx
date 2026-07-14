@@ -3,10 +3,12 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { NAV_ITEMS } from "@/constants/nav";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { cn } from "@/utils/cn";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <aside className="hidden w-64 shrink-0 flex-col gap-1 border-r border-[var(--color-border)] bg-[var(--color-surface)] p-4 lg:flex">
@@ -14,7 +16,7 @@ export function Sidebar() {
         <div className="flex h-9 w-9 items-center justify-center rounded-[var(--radius-md)] bg-[var(--color-primary)] text-lg">
           🍔
         </div>
-        <span className="text-lg font-semibold text-[var(--color-text)]">Burger POS</span>
+        <span className="text-lg font-semibold text-[var(--color-text)]">{t.auth.appName}</span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1">
@@ -31,7 +33,7 @@ export function Sidebar() {
               )}
             >
               <Icon className="h-5 w-5" />
-              {item.label}
+              {t.nav[item.labelKey]}
             </Link>
           );
         })}

@@ -8,12 +8,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { StatCard } from "@/components/ui/StatCard";
 import { dateRangeForPeriod, REPORT_PERIODS, type ReportPeriod, useReport } from "@/features/reports/hooks/useReport";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { cn } from "@/utils/cn";
 import { downloadCsv } from "@/utils/exportCsv";
 import { downloadReportPdf } from "@/utils/exportPdf";
 import { formatCurrency, formatDate } from "@/utils/format";
 
 export function ReportContent() {
+  const { t } = useLanguage();
   const [period, setPeriod] = useState<ReportPeriod>("Daily");
   const { rows, totals, loading } = useReport(period);
   const { start, end } = dateRangeForPeriod(period);
@@ -22,11 +24,14 @@ export function ReportContent() {
   function exportCsv() {
     downloadCsv(
       `report-${period.toLowerCase()}.csv`,
-      ["Period", "Revenue", "Cost", "Profit", "Expense", "Net Profit"],
+      [t.reports.colPeriod, t.reports.revenue, t.reports.cost, t.reports.profit, t.reports.expense, t.reports.netProfit],
       rows.map((r) => [r.label, r.revenue, r.cost, r.profit, r.expense, r.netProfit]),
     );
   }
 
+  // PDF export always uses English labels: jsPDF's built-in fonts don't include
+  // Thai glyphs, and embedding a custom font just for export is out of scope —
+  // the CSV/Excel export above fully supports Thai text instead.
   function exportPdf() {
     downloadReportPdf({
       title: `${period} Report`,
@@ -55,17 +60,17 @@ export function ReportContent() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">Reports</h1>
+          <h1 className="text-2xl font-semibold text-[var(--color-text)]">{t.reports.title}</h1>
           <p className="text-sm text-[var(--color-text-muted)]">{subtitle}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" onClick={exportCsv} disabled={rows.length === 0}>
             <Download className="h-4 w-4" />
-            Excel (CSV)
+            {t.reports.exportExcel}
           </Button>
           <Button variant="secondary" onClick={exportPdf} disabled={rows.length === 0}>
             <FileText className="h-4 w-4" />
-            PDF
+            {t.reports.exportPdf}
           </Button>
         </div>
       </div>
@@ -81,7 +86,7 @@ export function ReportContent() {
               period === p ? "bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm" : "text-[var(--color-text-muted)]",
             )}
           >
-            {p}
+            {t.reports.periods[p]}
           </button>
         ))}
       </div>
@@ -93,12 +98,12 @@ export function ReportContent() {
       ) : (
         <>
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-            <StatCard label="Revenue" value={formatCurrency(totals.revenue)} icon={TrendingUp} tone="primary" />
-            <StatCard label="Cost" value={formatCurrency(totals.cost)} icon={Receipt} tone="warning" />
-            <StatCard label="Profit" value={formatCurrency(totals.profit)} icon={TrendingUp} tone="success" />
-            <StatCard label="Expense" value={formatCurrency(totals.expense)} icon={Wallet} tone="danger" />
+            <StatCard label={t.reports.revenue} value={formatCurrency(totals.revenue)} icon={TrendingUp} tone="primary" />
+            <StatCard label={t.reports.cost} value={formatCurrency(totals.cost)} icon={Receipt} tone="warning" />
+            <StatCard label={t.reports.profit} value={formatCurrency(totals.profit)} icon={TrendingUp} tone="success" />
+            <StatCard label={t.reports.expense} value={formatCurrency(totals.expense)} icon={Wallet} tone="danger" />
             <StatCard
-              label="Net Profit"
+              label={t.reports.netProfit}
               value={formatCurrency(totals.netProfit)}
               icon={totals.netProfit >= 0 ? TrendingUp : TrendingDown}
               tone={totals.netProfit >= 0 ? "success" : "danger"}
@@ -107,7 +112,7 @@ export function ReportContent() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Overview</CardTitle>
+              <CardTitle>{t.reports.overview}</CardTitle>
             </CardHeader>
             <CardContent>
               <ReportBarChart rows={rows} />
@@ -116,25 +121,25 @@ export function ReportContent() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Breakdown</CardTitle>
+              <CardTitle>{t.reports.breakdown}</CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto scrollbar-thin">
               <table className="w-full min-w-[560px] border-collapse text-sm">
                 <thead>
                   <tr className="border-b border-[var(--color-border)] text-left text-[var(--color-text-muted)]">
-                    <th className="whitespace-nowrap px-3 py-2.5 font-medium">Period</th>
-                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">Revenue</th>
-                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">Cost</th>
-                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">Profit</th>
-                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">Expense</th>
-                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">Net Profit</th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium">{t.reports.colPeriod}</th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">{t.reports.revenue}</th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">{t.reports.cost}</th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">{t.reports.profit}</th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">{t.reports.expense}</th>
+                    <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">{t.reports.netProfit}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {rows.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="px-3 py-6 text-center text-[var(--color-text-muted)]">
-                        No data for this period yet.
+                        {t.reports.noData}
                       </td>
                     </tr>
                   ) : (

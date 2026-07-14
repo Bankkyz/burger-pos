@@ -10,13 +10,16 @@ import {
   YAxis,
 } from "recharts";
 import type { DailyRevenuePoint } from "@/services/dashboardService";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { formatCurrency, formatDate } from "@/utils/format";
 
 export function RevenueChart({ data }: { data: DailyRevenuePoint[] }) {
+  const { t } = useLanguage();
+
   if (data.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center text-sm text-[var(--color-text-muted)]">
-        No sales recorded this month yet.
+        {t.dashboard.noSalesThisMonth}
       </div>
     );
   }
@@ -61,8 +64,8 @@ export function RevenueChart({ data }: { data: DailyRevenuePoint[] }) {
           labelFormatter={(value) => formatDate(String(value))}
           formatter={(value, name) => [formatCurrency(Number(value)), String(name)]}
         />
-        <Area type="monotone" dataKey="revenue" name="Revenue" stroke="var(--color-primary)" fill="url(#revenueFill)" strokeWidth={2} />
-        <Area type="monotone" dataKey="profit" name="Profit" stroke="var(--color-success)" fill="url(#profitFill)" strokeWidth={2} />
+        <Area type="monotone" dataKey="revenue" name={t.reports.revenue} stroke="var(--color-primary)" fill="url(#revenueFill)" strokeWidth={2} />
+        <Area type="monotone" dataKey="profit" name={t.reports.profit} stroke="var(--color-success)" fill="url(#profitFill)" strokeWidth={2} />
       </AreaChart>
     </ResponsiveContainer>
   );

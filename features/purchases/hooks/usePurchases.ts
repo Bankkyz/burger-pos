@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { ingredientsService } from "@/services/ingredientsService";
 import { purchasesService } from "@/services/purchasesService";
 import { suppliersService } from "@/services/suppliersService";
@@ -8,6 +9,7 @@ import type { Ingredient, Purchase, Supplier } from "@/types";
 import { toast } from "@/utils/toast";
 
 export function usePurchases() {
+  const { t } = useLanguage();
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -27,7 +29,7 @@ export function usePurchases() {
       },
       (error) => {
         console.error("[purchases]", error);
-        toast.error("Failed to load purchases.");
+        toast.error(t.purchases.toastLoadFailed);
       },
     );
 
@@ -39,7 +41,7 @@ export function usePurchases() {
       },
       (error) => {
         console.error("[suppliers]", error);
-        toast.error("Failed to load suppliers.");
+        toast.error(t.common.toastLoadSuppliersFailed);
       },
     );
 
@@ -51,7 +53,7 @@ export function usePurchases() {
       },
       (error) => {
         console.error("[ingredients]", error);
-        toast.error("Failed to load ingredients.");
+        toast.error(t.ingredients.toastLoadFailed);
       },
     );
 
@@ -60,7 +62,7 @@ export function usePurchases() {
       unsubSuppliers();
       unsubIngredients();
     };
-  }, []);
+  }, [t]);
 
   return { purchases, suppliers, ingredients, loading };
 }

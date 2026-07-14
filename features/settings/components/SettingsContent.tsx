@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { PromptPayQr } from "@/components/PromptPayQr";
@@ -12,25 +12,31 @@ import { Select } from "@/components/ui/Select";
 import { Spinner } from "@/components/ui/Spinner";
 import { useSettings } from "@/features/settings/hooks/useSettings";
 import { uploadFile } from "@/lib/firebase/storage";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import type { Translations } from "@/lib/i18n/en";
 import { settingsService } from "@/services/settingsService";
 import { toast } from "@/utils/toast";
 
 const CURRENCIES = ["THB", "USD", "EUR", "GBP", "SGD", "JPY"] as const;
 
-const schema = z.object({
-  name: z.string().min(1, "Required"),
-  currency: z.string().min(1, "Required"),
-  taxPercent: z.number().min(0).max(100),
-  deliveryGpGrab: z.number().min(0).max(100),
-  deliveryGpLineMan: z.number().min(0).max(100),
-  deliveryGpFoodpanda: z.number().min(0).max(100),
-  promptPayId: z.string().optional(),
-});
+function buildSchema(t: Translations) {
+  return z.object({
+    name: z.string().min(1, t.common.required),
+    currency: z.string().min(1, t.common.required),
+    taxPercent: z.number().min(0).max(100),
+    deliveryGpGrab: z.number().min(0).max(100),
+    deliveryGpLineMan: z.number().min(0).max(100),
+    deliveryGpFoodpanda: z.number().min(0).max(100),
+    promptPayId: z.string().optional(),
+  });
+}
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 export function SettingsContent() {
   const { settings, loading } = useSettings();
+  const { t } = useLanguage();
+  const schema = useMemo(() => buildSchema(t), [t]);
   const [logoUploading, setLogoUploading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -66,10 +72,10 @@ export function SettingsContent() {
       const url = await uploadFile(`logos/${Date.now()}-${file.name}`, file);
       await settingsService.updateSettings({ logoUrl: url });
       setLogoUrl(url);
-      toast.success("Logo updated.");
+      toast.success(t.settings.toastLogoUpdated);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to upload logo.");
+      toast.error(t.settings.toastLogoFailed);
     } finally {
       setLogoUploading(false);
     }
@@ -89,10 +95,10 @@ export function SettingsContent() {
         },
         promptPayId: values.promptPayId,
       });
-      toast.success("Settings saved.");
+      toast.success(t.settings.toastSaved);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save settings.");
+      toast.error(t.settings.toastSaveFailed);
     }
   }
 
@@ -107,14 +113,14 @@ export function SettingsContent() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--color-text)]">Settings</h1>
-        <p className="text-sm text-[var(--color-text-muted)]">Restaurant profile, currency, tax, and payments.</p>
+        <h1 className="text-2xl font-semibold text-[var(--color-text)]">{t.settings.title}</h1>
+        <p className="text-sm text-[var(--color-text-muted)]">{t.settings.subtitle}</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6" noValidate>
         <Card>
           <CardHeader>
-            <CardTitle>Restaurant Profile</CardTitle>
+            <CardTitle>{t.settings.restaurantProfile}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <div className="flex items-center gap-4">
@@ -135,22 +141,22 @@ export function SettingsContent() {
                   onChange={(e) => onLogoSelected(e.target.files?.[0])}
                 />
                 <Button type="button" variant="secondary" size="sm" loading={logoUploading} onClick={() => fileInputRef.current?.click()}>
-                  Upload Logo
+                  {t.settings.uploadLogo}
                 </Button>
               </div>
             </div>
 
-            <Input label="Restaurant Name" error={errors.name?.message} {...register("name")} />
+            <Input label={t.settings.restaurantName} error={errors.name?.message} {...register("name")} />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Currency &amp; Tax</CardTitle>
+            <CardTitle>{t.settings.currencyAndTax}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4">
-              <Select label="Currency" error={errors.currency?.message} {...register("currency")}>
+              <Select label={t.settings.currency} error={errors.currency?.message} {...register("currency")}>
                 {CURRENCIES.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -158,7 +164,7 @@ export function SettingsContent() {
                 ))}
               </Select>
               <Input
-                label="Tax (%)"
+                label={t.settings.tax}
                 type="number"
                 step="0.01"
                 min={0}
@@ -172,29 +178,29 @@ export function SettingsContent() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Delivery GP (%)</CardTitle>
+            <CardTitle>{t.settings.deliveryGp}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 gap-4">
-              <Input label="Grab" type="number" step="0.01" min={0} max={100} {...register("deliveryGpGrab", { valueAsNumber: true })} />
-              <Input label="LINE MAN" type="number" step="0.01" min={0} max={100} {...register("deliveryGpLineMan", { valueAsNumber: true })} />
-              <Input label="Foodpanda" type="number" step="0.01" min={0} max={100} {...register("deliveryGpFoodpanda", { valueAsNumber: true })} />
+              <Input label={t.settings.grab} type="number" step="0.01" min={0} max={100} {...register("deliveryGpGrab", { valueAsNumber: true })} />
+              <Input label={t.settings.lineMan} type="number" step="0.01" min={0} max={100} {...register("deliveryGpLineMan", { valueAsNumber: true })} />
+              <Input label={t.settings.foodpanda} type="number" step="0.01" min={0} max={100} {...register("deliveryGpFoodpanda", { valueAsNumber: true })} />
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>PromptPay</CardTitle>
+            <CardTitle>{t.settings.promptPay}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-start">
             <div className="flex-1">
-              <Input label="PromptPay ID (mobile or tax ID)" placeholder="0812345678" {...register("promptPayId")} />
+              <Input label={t.settings.promptPayId} placeholder="0812345678" {...register("promptPayId")} />
             </div>
             {promptPayId && (
               <div className="flex flex-col items-center gap-2">
                 <PromptPayQr promptPayId={promptPayId} size={140} />
-                <span className="text-xs text-[var(--color-text-muted)]">Preview</span>
+                <span className="text-xs text-[var(--color-text-muted)]">{t.settings.preview}</span>
               </div>
             )}
           </CardContent>
@@ -202,7 +208,7 @@ export function SettingsContent() {
 
         <div className="flex justify-end">
           <Button type="submit" size="lg" loading={isSubmitting}>
-            Save Settings
+            {t.settings.saveSettings}
           </Button>
         </div>
       </form>

@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { type ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { cn } from "@/utils/cn";
 
 export interface ModalProps {
@@ -14,6 +15,8 @@ export interface ModalProps {
 }
 
 export function Modal({ open, onClose, title, children, className }: ModalProps) {
+  const { t } = useLanguage();
+
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -43,7 +46,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={t.common.close}
             className="flex h-9 w-9 items-center justify-center rounded-full text-[var(--color-text-muted)] transition-colors hover:bg-[var(--color-surface-2)]"
           >
             <X className="h-5 w-5" />

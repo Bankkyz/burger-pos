@@ -3,44 +3,50 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { signInWithEmail, signInWithGoogle } from "@/lib/firebase/auth";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import type { Translations } from "@/lib/i18n/en";
 import { toast } from "@/utils/toast";
 
-const schema = z.object({
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(6, "Minimum 6 characters"),
-});
+function buildSchema(t: Translations) {
+  return z.object({
+    email: z.string().email(t.auth.emailInvalid),
+    password: z.string().min(6, t.auth.passwordMin),
+  });
+}
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
-function authErrorMessage(error: unknown): string {
+function authErrorMessage(error: unknown, t: Translations): string {
   if (error instanceof FirebaseError) {
     switch (error.code) {
       case "auth/invalid-credential":
       case "auth/wrong-password":
       case "auth/user-not-found":
-        return "Incorrect email or password.";
+        return t.auth.errorInvalidCredential;
       case "auth/too-many-requests":
-        return "Too many attempts. Please try again later.";
+        return t.auth.errorTooManyRequests;
       case "auth/popup-closed-by-user":
-        return "Google sign-in was cancelled.";
+        return t.auth.errorPopupClosed;
       default:
-        return "Sign-in failed. Please try again.";
+        return t.auth.errorGeneric;
     }
   }
-  return "Sign-in failed. Please try again.";
+  return t.auth.errorGeneric;
 }
 
 export function LoginForm() {
   const router = useRouter();
   const { status } = useAuth();
+  const { t } = useLanguage();
   const [googleLoading, setGoogleLoading] = useState(false);
+  const schema = useMemo(() => buildSchema(t), [t]);
   const {
     register,
     handleSubmit,
@@ -56,7 +62,7 @@ export function LoginForm() {
     try {
       await signInWithEmail(values.email, values.password);
     } catch (error) {
-      toast.error(authErrorMessage(error));
+      toast.error(authErrorMessage(error, t));
     }
   }
 
@@ -65,7 +71,7 @@ export function LoginForm() {
     try {
       await signInWithGoogle();
     } catch (error) {
-      toast.error(authErrorMessage(error));
+      toast.error(authErrorMessage(error, t));
     } finally {
       setGoogleLoading(false);
     }
@@ -75,15 +81,15 @@ export function LoginForm() {
     <div className="flex w-full flex-col gap-6">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         <Input
-          label="Email"
+          label={t.auth.email}
           type="email"
           autoComplete="email"
-          placeholder="you@restaurant.com"
+          placeholder={t.auth.emailPlaceholder}
           error={errors.email?.message}
           {...register("email")}
         />
         <Input
-          label="Password"
+          label={t.auth.password}
           type="password"
           autoComplete="current-password"
           placeholder="••••••••"
@@ -91,13 +97,13 @@ export function LoginForm() {
           {...register("password")}
         />
         <Button type="submit" size="lg" loading={isSubmitting} className="mt-2 w-full">
-          Sign In
+          {t.auth.signIn}
         </Button>
       </form>
 
       <div className="flex items-center gap-3">
         <div className="h-px flex-1 bg-[var(--color-border)]" />
-        <span className="text-sm text-[var(--color-text-muted)]">or</span>
+        <span className="text-sm text-[var(--color-text-muted)]">{t.auth.or}</span>
         <div className="h-px flex-1 bg-[var(--color-border)]" />
       </div>
 
@@ -108,7 +114,7 @@ export function LoginForm() {
         onClick={onGoogleSignIn}
         className="w-full"
       >
-        Continue with Google
+        {t.auth.continueWithGoogle}
       </Button>
     </div>
   );

@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { ingredientsService } from "@/services/ingredientsService";
 import { recipesService } from "@/services/recipesService";
 import type { Ingredient, Recipe } from "@/types";
 import { toast } from "@/utils/toast";
 
 export function useRecipes() {
+  const { t } = useLanguage();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,7 +28,7 @@ export function useRecipes() {
       },
       (error) => {
         console.error("[recipes]", error);
-        toast.error("Failed to load recipes.");
+        toast.error(t.recipes.toastLoadFailed);
       },
     );
 
@@ -38,7 +40,7 @@ export function useRecipes() {
       },
       (error) => {
         console.error("[ingredients]", error);
-        toast.error("Failed to load ingredients.");
+        toast.error(t.ingredients.toastLoadFailed);
       },
     );
 
@@ -46,7 +48,7 @@ export function useRecipes() {
       unsubRecipes();
       unsubIngredients();
     };
-  }, []);
+  }, [t]);
 
   return { recipes, ingredients, loading };
 }

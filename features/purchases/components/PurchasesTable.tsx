@@ -1,17 +1,20 @@
 import type { Purchase } from "@/types";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { formatCurrency, formatDateTime } from "@/utils/format";
 
 export function PurchasesTable({ purchases }: { purchases: Purchase[] }) {
+  const { t } = useLanguage();
+
   return (
     <div className="overflow-x-auto scrollbar-thin">
       <table className="w-full min-w-[600px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-[var(--color-border)] text-left text-[var(--color-text-muted)]">
-            <th className="whitespace-nowrap px-3 py-2.5 font-medium">Date</th>
-            <th className="whitespace-nowrap px-3 py-2.5 font-medium">Supplier</th>
-            <th className="whitespace-nowrap px-3 py-2.5 font-medium">Items</th>
-            <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">Total</th>
-            <th className="whitespace-nowrap px-3 py-2.5 font-medium">Note</th>
+            <th className="whitespace-nowrap px-3 py-2.5 font-medium">{t.purchases.colDate}</th>
+            <th className="whitespace-nowrap px-3 py-2.5 font-medium">{t.purchases.colSupplier}</th>
+            <th className="whitespace-nowrap px-3 py-2.5 font-medium">{t.purchases.colItems}</th>
+            <th className="whitespace-nowrap px-3 py-2.5 font-medium text-right">{t.purchases.colTotal}</th>
+            <th className="whitespace-nowrap px-3 py-2.5 font-medium">{t.purchases.colNote}</th>
           </tr>
         </thead>
         <tbody>

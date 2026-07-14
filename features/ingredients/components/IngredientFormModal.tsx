@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/Button";
@@ -9,25 +9,29 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { INGREDIENT_CATEGORIES, INGREDIENT_UNITS } from "@/constants";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import type { Translations } from "@/lib/i18n/en";
 import { ingredientsService } from "@/services/ingredientsService";
 import type { Ingredient, Supplier } from "@/types";
 import { calcCostPerGram } from "@/utils/calculations";
 import { formatCurrency } from "@/utils/format";
 import { toast } from "@/utils/toast";
 
-const schema = z.object({
-  name: z.string().min(1, "Required"),
-  category: z.enum(INGREDIENT_CATEGORIES),
-  unit: z.enum(INGREDIENT_UNITS),
-  purchasePrice: z.number().min(0, "Must be 0 or more"),
-  purchaseUnitGrams: z.number().positive("Must be greater than 0"),
-  currentStock: z.number().min(0, "Must be 0 or more"),
-  minimumStock: z.number().min(0, "Must be 0 or more"),
-  expireDate: z.string().optional(),
-  supplierId: z.string().optional(),
-});
+function buildSchema(t: Translations) {
+  return z.object({
+    name: z.string().min(1, t.common.required),
+    category: z.enum(INGREDIENT_CATEGORIES),
+    unit: z.enum(INGREDIENT_UNITS),
+    purchasePrice: z.number().min(0, t.common.mustBeZeroOrMore),
+    purchaseUnitGrams: z.number().positive(t.common.mustBeGreaterThanZero),
+    currentStock: z.number().min(0, t.common.mustBeZeroOrMore),
+    minimumStock: z.number().min(0, t.common.mustBeZeroOrMore),
+    expireDate: z.string().optional(),
+    supplierId: z.string().optional(),
+  });
+}
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 export interface IngredientFormModalProps {
   open: boolean;
@@ -37,6 +41,8 @@ export interface IngredientFormModalProps {
 }
 
 export function IngredientFormModal({ open, onClose, ingredient, suppliers }: IngredientFormModalProps) {
+  const { t } = useLanguage();
+  const schema = useMemo(() => buildSchema(t), [t]);
   const {
     register,
     handleSubmit,
@@ -97,35 +103,40 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
     try {
       if (ingredient) {
         await ingredientsService.update(ingredient.id, ingredient, payload);
-        toast.success("Ingredient updated.");
+        toast.success(t.ingredients.toastUpdated);
       } else {
         await ingredientsService.create(payload);
-        toast.success("Ingredient added.");
+        toast.success(t.ingredients.toastAdded);
       }
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save ingredient.");
+      toast.error(t.ingredients.toastSaveFailed);
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={ingredient ? "Edit Ingredient" : "Add Ingredient"}>
+    <Modal open={open} onClose={onClose} title={ingredient ? t.ingredients.editIngredient : t.ingredients.addIngredient}>
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
-        <Input label="Name" placeholder="e.g. Beef Patty" error={errors.name?.message} {...register("name")} />
+        <Input
+          label={t.ingredients.fieldName}
+          placeholder={t.ingredients.fieldNamePlaceholder}
+          error={errors.name?.message}
+          {...register("name")}
+        />
 
         <div className="grid grid-cols-2 gap-4">
-          <Select label="Category" error={errors.category?.message} {...register("category")}>
+          <Select label={t.ingredients.fieldCategory} error={errors.category?.message} {...register("category")}>
             {INGREDIENT_CATEGORIES.map((c) => (
               <option key={c} value={c}>
-                {c}
+                {t.ingredients.categories[c]}
               </option>
             ))}
           </Select>
-          <Select label="Unit" error={errors.unit?.message} {...register("unit")}>
+          <Select label={t.ingredients.fieldUnit} error={errors.unit?.message} {...register("unit")}>
             {INGREDIENT_UNITS.map((u) => (
               <option key={u} value={u}>
-                {u}
+                {t.ingredients.units[u]}
               </option>
             ))}
           </Select>
@@ -133,7 +144,7 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
 
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label="Purchase Price"
+            label={t.ingredients.fieldPurchasePrice}
             type="number"
             step="0.01"
             min={0}
@@ -141,7 +152,7 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
             {...register("purchasePrice", { valueAsNumber: true })}
           />
           <Input
-            label="Purchase Size (g/ml)"
+            label={t.ingredients.fieldPurchaseSize}
             type="number"
             step="0.01"
             min={0}
@@ -151,12 +162,13 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
         </div>
 
         <div className="rounded-[var(--radius-md)] bg-[var(--color-surface-2)] px-4 py-3 text-sm text-[var(--color-text-muted)]">
-          Cost per gram: <span className="font-semibold text-[var(--color-text)]">{formatCurrency(previewCostPerGram)}</span>
+          {t.ingredients.costPerGramPreview}{" "}
+          <span className="font-semibold text-[var(--color-text)]">{formatCurrency(previewCostPerGram)}</span>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <Input
-            label="Current Stock"
+            label={t.ingredients.fieldCurrentStock}
             type="number"
             step="0.01"
             min={0}
@@ -164,7 +176,7 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
             {...register("currentStock", { valueAsNumber: true })}
           />
           <Input
-            label="Minimum Stock"
+            label={t.ingredients.fieldMinimumStock}
             type="number"
             step="0.01"
             min={0}
@@ -174,9 +186,9 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Expire Date" type="date" {...register("expireDate")} />
-          <Select label="Supplier" {...register("supplierId")}>
-            <option value="">None</option>
+          <Input label={t.ingredients.fieldExpireDate} type="date" {...register("expireDate")} />
+          <Select label={t.ingredients.fieldSupplier} {...register("supplierId")}>
+            <option value="">{t.common.none}</option>
             {suppliers.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name}
@@ -187,10 +199,10 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
 
         <div className="mt-2 flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button type="submit" loading={isSubmitting}>
-            {ingredient ? "Save Changes" : "Add Ingredient"}
+            {ingredient ? t.ingredients.saveChanges : t.ingredients.addIngredient}
           </Button>
         </div>
       </form>

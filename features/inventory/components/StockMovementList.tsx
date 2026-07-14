@@ -1,6 +1,7 @@
 import { ArrowDownCircle, ArrowUpCircle, History, SlidersHorizontal } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { StockMovement } from "@/types";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { cn } from "@/utils/cn";
 import { formatDateTime, formatNumber } from "@/utils/format";
 
@@ -11,9 +12,14 @@ const TYPE_ICON = {
 } as const;
 
 export function StockMovementList({ movements }: { movements: StockMovement[] }) {
+  const { t } = useLanguage();
+
   if (movements.length === 0) {
-    return <EmptyState icon={History} title="No stock movements yet" description="Purchases and sales will appear here." />;
+    return <EmptyState icon={History} title={t.inventory.noMovements} description={t.inventory.noMovementsHint} />;
   }
+
+  const typeLabel = (type: StockMovement["type"]) =>
+    type === "sale" ? t.inventory.movementSale : type === "purchase" ? t.inventory.movementPurchase : t.inventory.movementAdjustment;
 
   return (
     <ul className="flex flex-col gap-3">
@@ -33,8 +39,7 @@ export function StockMovementList({ movements }: { movements: StockMovement[] })
             <div className="flex-1 min-w-0">
               <p className="truncate text-sm font-medium text-[var(--color-text)]">{movement.ingredientName}</p>
               <p className="text-xs text-[var(--color-text-muted)]">
-                {movement.type === "sale" ? "Sale" : movement.type === "purchase" ? "Purchase" : "Adjustment"} ·{" "}
-                {formatDateTime(movement.createdAt)}
+                {typeLabel(movement.type)} · {formatDateTime(movement.createdAt)}
               </p>
             </div>
             <div className="text-right">
@@ -42,7 +47,9 @@ export function StockMovementList({ movements }: { movements: StockMovement[] })
                 {isIn ? "+" : ""}
                 {formatNumber(movement.quantity)}
               </p>
-              <p className="text-xs text-[var(--color-text-muted)]">Balance: {formatNumber(movement.balanceAfter)}</p>
+              <p className="text-xs text-[var(--color-text-muted)]">
+                {t.inventory.balance} {formatNumber(movement.balanceAfter)}
+              </p>
             </div>
           </li>
         );

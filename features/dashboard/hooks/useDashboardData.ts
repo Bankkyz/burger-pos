@@ -11,6 +11,7 @@ import {
   type TopSellingItem,
 } from "@/services/dashboardService";
 import type { Ingredient } from "@/types";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { toast } from "@/utils/toast";
 
 export interface DashboardData {
@@ -25,6 +26,7 @@ export interface DashboardData {
 const EMPTY_TODAY: TodaySummary = { sales: 0, cost: 0, profit: 0, orders: 0 };
 
 export function useDashboardData(): DashboardData {
+  const { t } = useLanguage();
   const [today, setToday] = useState<TodaySummary>(EMPTY_TODAY);
   const [monthlyRevenue, setMonthlyRevenue] = useState<DailyRevenuePoint[]>([]);
   const [topSelling, setTopSelling] = useState<TopSellingItem[]>([]);
@@ -39,7 +41,7 @@ export function useDashboardData(): DashboardData {
   useEffect(() => {
     const onError = (error: Error) => {
       console.error("[dashboard]", error);
-      toast.error("Failed to load some dashboard data.");
+      toast.error(t.dashboard.failedToLoad);
     };
 
     const unsubToday = subscribeTodaySummary((value) => {
@@ -68,7 +70,7 @@ export function useDashboardData(): DashboardData {
       unsubTopSelling();
       unsubIngredients();
     };
-  }, []);
+  }, [t]);
 
   const lowStock = ingredients.filter((i) => i.currentStock > 0 && i.currentStock <= i.minimumStock);
   const outOfStock = ingredients.filter((i) => i.currentStock <= 0);

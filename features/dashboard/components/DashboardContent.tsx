@@ -7,10 +7,12 @@ import { StatCard, StatCardSkeleton } from "@/components/ui/StatCard";
 import { useDashboardData } from "@/features/dashboard/hooks/useDashboardData";
 import { LowStockAlert } from "@/features/dashboard/components/LowStockAlert";
 import { TopSellingList } from "@/features/dashboard/components/TopSellingList";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { formatCurrency, formatNumber } from "@/utils/format";
 
 export function DashboardContent() {
   const { loading, today, monthlyRevenue, topSelling, lowStock, outOfStock } = useDashboardData();
+  const { t } = useLanguage();
 
   const monthlyRevenueTotal = monthlyRevenue.reduce((sum, p) => sum + p.revenue, 0);
   const stockAlertCount = lowStock.length + outOfStock.length;
@@ -18,8 +20,8 @@ export function DashboardContent() {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-semibold text-[var(--color-text)]">Dashboard</h1>
-        <p className="text-sm text-[var(--color-text-muted)]">A live view of today&apos;s performance.</p>
+        <h1 className="text-2xl font-semibold text-[var(--color-text)]">{t.dashboard.title}</h1>
+        <p className="text-sm text-[var(--color-text-muted)]">{t.dashboard.subtitle}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -32,10 +34,10 @@ export function DashboardContent() {
           </>
         ) : (
           <>
-            <StatCard label="Today's Sales" value={formatCurrency(today.sales)} icon={DollarSign} tone="primary" />
-            <StatCard label="Today's Profit" value={formatCurrency(today.profit)} icon={TrendingUp} tone="success" />
-            <StatCard label="Today's Cost" value={formatCurrency(today.cost)} icon={Receipt} tone="warning" />
-            <StatCard label="Today's Orders" value={formatNumber(today.orders)} icon={ShoppingBag} tone="primary" />
+            <StatCard label={t.dashboard.todaySales} value={formatCurrency(today.sales)} icon={DollarSign} tone="primary" />
+            <StatCard label={t.dashboard.todayProfit} value={formatCurrency(today.profit)} icon={TrendingUp} tone="success" />
+            <StatCard label={t.dashboard.todayCost} value={formatCurrency(today.cost)} icon={Receipt} tone="warning" />
+            <StatCard label={t.dashboard.todayOrders} value={formatNumber(today.orders)} icon={ShoppingBag} tone="primary" />
           </>
         )}
       </div>
@@ -43,7 +45,7 @@ export function DashboardContent() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Monthly Revenue</CardTitle>
+            <CardTitle>{t.dashboard.monthlyRevenue}</CardTitle>
             <span className="text-sm font-semibold text-[var(--color-text)]">{formatCurrency(monthlyRevenueTotal)}</span>
           </CardHeader>
           <CardContent>
@@ -53,7 +55,7 @@ export function DashboardContent() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Top Selling Menu</CardTitle>
+            <CardTitle>{t.dashboard.topSellingMenu}</CardTitle>
           </CardHeader>
           <CardContent>
             <TopSellingList items={topSelling} />
@@ -63,10 +65,10 @@ export function DashboardContent() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Stock Alerts</CardTitle>
+          <CardTitle>{t.dashboard.stockAlerts}</CardTitle>
           {stockAlertCount > 0 && (
             <span className="rounded-full bg-[var(--color-danger)]/10 px-2.5 py-1 text-xs font-semibold text-[var(--color-danger)]">
-              {stockAlertCount} item{stockAlertCount === 1 ? "" : "s"}
+              {t.dashboard.itemCount(stockAlertCount)}
             </span>
           )}
         </CardHeader>

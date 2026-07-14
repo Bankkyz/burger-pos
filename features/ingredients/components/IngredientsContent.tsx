@@ -11,12 +11,14 @@ import { Spinner } from "@/components/ui/Spinner";
 import { IngredientFormModal } from "@/features/ingredients/components/IngredientFormModal";
 import { IngredientsTable } from "@/features/ingredients/components/IngredientsTable";
 import { useIngredients } from "@/features/ingredients/hooks/useIngredients";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { ingredientsService } from "@/services/ingredientsService";
 import type { Ingredient } from "@/types";
 import { toast } from "@/utils/toast";
 
 export function IngredientsContent() {
   const { ingredients, suppliers, loading } = useIngredients();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Ingredient | null>(null);
@@ -46,11 +48,11 @@ export function IngredientsContent() {
     setDeleting(true);
     try {
       await ingredientsService.remove(pendingDelete.id);
-      toast.success("Ingredient deleted.");
+      toast.success(t.ingredients.toastDeleted);
       setPendingDelete(null);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete ingredient.");
+      toast.error(t.ingredients.toastDeleteFailed);
     } finally {
       setDeleting(false);
     }
@@ -60,19 +62,19 @@ export function IngredientsContent() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">Ingredients</h1>
-          <p className="text-sm text-[var(--color-text-muted)]">Manage stock, pricing, and suppliers.</p>
+          <h1 className="text-2xl font-semibold text-[var(--color-text)]">{t.ingredients.title}</h1>
+          <p className="text-sm text-[var(--color-text-muted)]">{t.ingredients.subtitle}</p>
         </div>
         <Button onClick={openCreate} size="lg">
           <Plus className="h-5 w-5" />
-          Add Ingredient
+          {t.ingredients.addIngredient}
         </Button>
       </div>
 
       <div className="relative max-w-sm">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
         <Input
-          placeholder="Search ingredients..."
+          placeholder={t.ingredients.searchPlaceholder}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -87,13 +89,13 @@ export function IngredientsContent() {
         ) : filtered.length === 0 ? (
           <EmptyState
             icon={Boxes}
-            title={search ? "No matching ingredients" : "No ingredients yet"}
-            description={search ? "Try a different search term." : "Add your first ingredient to get started."}
+            title={search ? t.ingredients.noMatching : t.ingredients.noIngredients}
+            description={search ? t.ingredients.tryDifferentSearch : t.ingredients.addFirstHint}
             action={
               !search && (
                 <Button onClick={openCreate} size="sm">
                   <Plus className="h-4 w-4" />
-                  Add Ingredient
+                  {t.ingredients.addIngredient}
                 </Button>
               )
             }
@@ -107,9 +109,9 @@ export function IngredientsContent() {
 
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete Ingredient"
-        description={`Are you sure you want to delete "${pendingDelete?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t.ingredients.deleteTitle}
+        description={t.ingredients.deleteDescription(pendingDelete?.name ?? "")}
+        confirmLabel={t.common.delete}
         danger
         loading={deleting}
         onConfirm={confirmDelete}

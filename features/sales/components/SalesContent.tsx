@@ -7,6 +7,7 @@ import { CartPanel } from "@/features/sales/components/CartPanel";
 import { MenuGrid } from "@/features/sales/components/MenuGrid";
 import { useCart } from "@/features/sales/hooks/useCart";
 import { useMenu } from "@/features/sales/hooks/useMenu";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { salesService } from "@/services/salesService";
 import type { PaymentMethod, SaleChannel } from "@/types";
 import { toast } from "@/utils/toast";
@@ -14,6 +15,7 @@ import { toast } from "@/utils/toast";
 export function SalesContent() {
   const { recipes, loading } = useMenu();
   const { firebaseUser } = useAuth();
+  const { t } = useLanguage();
   const cart = useCart();
   const [checkingOut, setCheckingOut] = useState(false);
 
@@ -36,11 +38,11 @@ export function SalesContent() {
         channel,
         actorEmail: firebaseUser?.email ?? "unknown",
       });
-      toast.success("Order saved.");
+      toast.success(t.sales.toastSaved);
       cart.clear();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save order.");
+      toast.error(t.sales.toastSaveFailed);
     } finally {
       setCheckingOut(false);
     }
@@ -49,7 +51,7 @@ export function SalesContent() {
   return (
     <div className="flex h-full flex-col gap-4 lg:flex-row">
       <div className="flex-1">
-        <h1 className="mb-4 text-2xl font-semibold text-[var(--color-text)]">Sales</h1>
+        <h1 className="mb-4 text-2xl font-semibold text-[var(--color-text)]">{t.sales.title}</h1>
         {loading ? (
           <div className="flex h-40 items-center justify-center">
             <Spinner />

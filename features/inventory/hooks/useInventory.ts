@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { ingredientsService } from "@/services/ingredientsService";
 import { subscribeStockMovements } from "@/services/inventoryService";
 import type { Ingredient, StockMovement } from "@/types";
 import { toast } from "@/utils/toast";
 
 export function useInventory() {
+  const { t } = useLanguage();
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +27,7 @@ export function useInventory() {
       },
       (error) => {
         console.error("[inventory:ingredients]", error);
-        toast.error("Failed to load stock.");
+        toast.error(t.inventory.toastLoadStockFailed);
       },
     );
 
@@ -37,7 +39,7 @@ export function useInventory() {
       },
       (error) => {
         console.error("[inventory:movements]", error);
-        toast.error("Failed to load stock movements.");
+        toast.error(t.inventory.toastLoadMovementsFailed);
       },
     );
 
@@ -45,7 +47,7 @@ export function useInventory() {
       unsubIngredients();
       unsubMovements();
     };
-  }, []);
+  }, [t]);
 
   const lowStock = ingredients.filter((i) => i.currentStock > 0 && i.currentStock <= i.minimumStock);
   const outOfStock = ingredients.filter((i) => i.currentStock <= 0);

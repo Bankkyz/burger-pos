@@ -10,21 +10,22 @@ import {
   Warehouse,
   Wallet,
 } from "lucide-react";
+import type { Translations } from "@/lib/i18n/en";
 
 export interface NavItem {
-  label: string;
+  labelKey: keyof Translations["nav"];
   href: string;
   icon: LucideIcon;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Sales", href: "/sales", icon: ShoppingCart },
-  { label: "Recipes", href: "/recipes", icon: ChefHat },
-  { label: "Ingredients", href: "/ingredients", icon: Boxes },
-  { label: "Inventory", href: "/inventory", icon: Warehouse },
-  { label: "Purchases", href: "/purchases", icon: Truck },
-  { label: "Expenses", href: "/expenses", icon: Wallet },
-  { label: "Reports", href: "/reports", icon: Receipt },
-  { label: "Settings", href: "/settings", icon: Settings },
+  { labelKey: "dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { labelKey: "sales", href: "/sales", icon: ShoppingCart },
+  { labelKey: "recipes", href: "/recipes", icon: ChefHat },
+  { labelKey: "ingredients", href: "/ingredients", icon: Boxes },
+  { labelKey: "inventory", href: "/inventory", icon: Warehouse },
+  { labelKey: "purchases", href: "/purchases", icon: Truck },
+  { labelKey: "expenses", href: "/expenses", icon: Wallet },
+  { labelKey: "reports", href: "/reports", icon: Receipt },
+  { labelKey: "settings", href: "/settings", icon: Settings },
 ];

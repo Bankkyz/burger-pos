@@ -1,13 +1,16 @@
 import { ChefHat } from "lucide-react";
 import type { TopSellingItem } from "@/services/dashboardService";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { formatCurrency, formatNumber } from "@/utils/format";
 
 export function TopSellingList({ items }: { items: TopSellingItem[] }) {
+  const { t } = useLanguage();
+
   if (items.length === 0) {
     return (
       <div className="flex h-40 flex-col items-center justify-center gap-2 text-center text-sm text-[var(--color-text-muted)]">
         <ChefHat className="h-8 w-8 opacity-40" />
-        No sales recorded this month yet.
+        {t.dashboard.noSalesThisMonth}
       </div>
     );
   }
@@ -34,7 +37,9 @@ export function TopSellingList({ items }: { items: TopSellingItem[] }) {
                 style={{ width: `${(item.quantity / maxQuantity) * 100}%` }}
               />
             </div>
-            <span className="text-xs text-[var(--color-text-muted)]">{formatNumber(item.quantity)} sold</span>
+            <span className="text-xs text-[var(--color-text-muted)]">
+              {formatNumber(item.quantity)} {t.dashboard.sold}
+            </span>
           </div>
         </li>
       ))}

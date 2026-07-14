@@ -11,6 +11,7 @@ import { StatCard } from "@/components/ui/StatCard";
 import { ExpenseFormModal } from "@/features/expenses/components/ExpenseFormModal";
 import { ExpensesTable } from "@/features/expenses/components/ExpensesTable";
 import { useExpenses } from "@/features/expenses/hooks/useExpenses";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { expensesService } from "@/services/expensesService";
 import type { Expense } from "@/types";
 import { toLocalDateString } from "@/utils/dateOnly";
@@ -19,6 +20,7 @@ import { toast } from "@/utils/toast";
 
 export function ExpensesContent() {
   const { expenses, loading } = useExpenses();
+  const { t } = useLanguage();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Expense | null>(null);
   const [pendingDelete, setPendingDelete] = useState<Expense | null>(null);
@@ -44,11 +46,11 @@ export function ExpensesContent() {
     setDeleting(true);
     try {
       await expensesService.remove(pendingDelete.id);
-      toast.success("Expense deleted.");
+      toast.success(t.expenses.toastDeleted);
       setPendingDelete(null);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete expense.");
+      toast.error(t.expenses.toastDeleteFailed);
     } finally {
       setDeleting(false);
     }
@@ -58,17 +60,17 @@ export function ExpensesContent() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">Expenses</h1>
-          <p className="text-sm text-[var(--color-text-muted)]">Track operating costs like rent, salary, and utilities.</p>
+          <h1 className="text-2xl font-semibold text-[var(--color-text)]">{t.expenses.title}</h1>
+          <p className="text-sm text-[var(--color-text-muted)]">{t.expenses.subtitle}</p>
         </div>
         <Button onClick={openCreate} size="lg">
           <Plus className="h-5 w-5" />
-          Add Expense
+          {t.expenses.addExpense}
         </Button>
       </div>
 
       <div className="max-w-xs">
-        <StatCard label="This Month" value={formatCurrency(monthTotal)} icon={Wallet} tone="warning" />
+        <StatCard label={t.expenses.thisMonth} value={formatCurrency(monthTotal)} icon={Wallet} tone="warning" />
       </div>
 
       <Card>
@@ -77,7 +79,7 @@ export function ExpensesContent() {
             <Spinner />
           </div>
         ) : expenses.length === 0 ? (
-          <EmptyState icon={Wallet} title="No expenses yet" description="Record your first expense to get started." />
+          <EmptyState icon={Wallet} title={t.expenses.noExpenses} description={t.expenses.noExpensesHint} />
         ) : (
           <ExpensesTable expenses={expenses} onEdit={openEdit} onDelete={setPendingDelete} />
         )}
@@ -87,9 +89,9 @@ export function ExpensesContent() {
 
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete Expense"
-        description="Are you sure you want to delete this expense? This cannot be undone."
-        confirmLabel="Delete"
+        title={t.expenses.deleteTitle}
+        description={t.expenses.deleteDescription}
+        confirmLabel={t.common.delete}
         danger
         loading={deleting}
         onConfirm={confirmDelete}

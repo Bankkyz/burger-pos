@@ -10,12 +10,14 @@ import { Spinner } from "@/components/ui/Spinner";
 import { RecipeCard } from "@/features/recipes/components/RecipeCard";
 import { RecipeFormModal } from "@/features/recipes/components/RecipeFormModal";
 import { useRecipes } from "@/features/recipes/hooks/useRecipes";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { recipesService } from "@/services/recipesService";
 import type { Recipe } from "@/types";
 import { toast } from "@/utils/toast";
 
 export function RecipesContent() {
   const { recipes, ingredients, loading } = useRecipes();
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Recipe | null>(null);
@@ -43,11 +45,11 @@ export function RecipesContent() {
     setDeleting(true);
     try {
       await recipesService.remove(pendingDelete.id);
-      toast.success("Recipe deleted.");
+      toast.success(t.recipes.toastDeleted);
       setPendingDelete(null);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to delete recipe.");
+      toast.error(t.recipes.toastDeleteFailed);
     } finally {
       setDeleting(false);
     }
@@ -57,24 +59,24 @@ export function RecipesContent() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-[var(--color-text)]">Recipes</h1>
-          <p className="text-sm text-[var(--color-text-muted)]">Build your menu and track margins.</p>
+          <h1 className="text-2xl font-semibold text-[var(--color-text)]">{t.recipes.title}</h1>
+          <p className="text-sm text-[var(--color-text-muted)]">{t.recipes.subtitle}</p>
         </div>
         <Button onClick={openCreate} size="lg" disabled={ingredients.length === 0}>
           <Plus className="h-5 w-5" />
-          Add Recipe
+          {t.recipes.addRecipe}
         </Button>
       </div>
 
       {ingredients.length === 0 && !loading && (
         <p className="rounded-[var(--radius-md)] bg-[var(--color-warning)]/10 px-4 py-3 text-sm text-[var(--color-warning)]">
-          Add at least one ingredient before creating a recipe.
+          {t.recipes.needIngredientHint}
         </p>
       )}
 
       <div className="relative max-w-sm">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--color-text-muted)]" />
-        <Input placeholder="Search recipes..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+        <Input placeholder={t.recipes.searchPlaceholder} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
       </div>
 
       {loading ? (
@@ -84,8 +86,8 @@ export function RecipesContent() {
       ) : filtered.length === 0 ? (
         <EmptyState
           icon={ChefHat}
-          title={search ? "No matching recipes" : "No recipes yet"}
-          description={search ? "Try a different search term." : "Add your first recipe to get started."}
+          title={search ? t.recipes.noMatching : t.recipes.noRecipes}
+          description={search ? t.recipes.tryDifferentSearch : t.recipes.addFirstHint}
         />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -99,9 +101,9 @@ export function RecipesContent() {
 
       <ConfirmDialog
         open={!!pendingDelete}
-        title="Delete Recipe"
-        description={`Are you sure you want to delete "${pendingDelete?.name}"? This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t.recipes.deleteTitle}
+        description={t.recipes.deleteDescription(pendingDelete?.name ?? "")}
+        confirmLabel={t.common.delete}
         danger
         loading={deleting}
         onConfirm={confirmDelete}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { getReport, type ReportData } from "@/services/reportsService";
 import { toast } from "@/utils/toast";
 
@@ -32,6 +33,14 @@ interface ReportState {
 }
 
 export function useReport(period: ReportPeriod) {
+  const { t } = useLanguage();
+  // Held in a ref (not an effect dependency) so toggling language doesn't
+  // trigger a redundant re-fetch of the report — only the error message text needs it.
+  const tRef = useRef(t);
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+
   const [state, setState] = useState<ReportState>({ period: null, data: EMPTY_REPORT, fetching: true });
 
   useEffect(() => {
@@ -44,7 +53,7 @@ export function useReport(period: ReportPeriod) {
       })
       .catch((error) => {
         console.error("[reports]", error);
-        toast.error("Failed to load report.");
+        toast.error(tRef.current.reports.toastLoadFailed);
         if (!cancelled) setState((s) => ({ ...s, fetching: false }));
       });
 

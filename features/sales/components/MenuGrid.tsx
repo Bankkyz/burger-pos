@@ -1,6 +1,7 @@
 import { ChefHat } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import type { Recipe } from "@/types";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { formatCurrency } from "@/utils/format";
 
 export interface MenuGridProps {
@@ -9,12 +10,14 @@ export interface MenuGridProps {
 }
 
 export function MenuGrid({ recipes, onSelect }: MenuGridProps) {
+  const { t } = useLanguage();
+
   if (recipes.length === 0) {
     return (
       <EmptyState
         icon={ChefHat}
-        title="No menu items available"
-        description="Mark a recipe as active to sell it here."
+        title={t.sales.noMenuItems}
+        description={t.sales.markActiveHint}
       />
     );
   }

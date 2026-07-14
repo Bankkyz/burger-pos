@@ -3,12 +3,14 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { NAV_ITEMS } from "@/constants/nav";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { cn } from "@/utils/cn";
 
 const PRIMARY_ITEMS = NAV_ITEMS.slice(0, 5);
 
 export function MobileNav() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 flex border-t border-[var(--color-border)] bg-[var(--color-surface)]/95 backdrop-blur lg:hidden">
@@ -25,7 +27,7 @@ export function MobileNav() {
             )}
           >
             <Icon className="h-5 w-5" />
-            {item.label}
+            {t.nav[item.labelKey]}
           </Link>
         );
       })}

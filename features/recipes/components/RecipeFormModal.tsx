@@ -10,25 +10,29 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Select } from "@/components/ui/Select";
 import { Spinner } from "@/components/ui/Spinner";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
+import type { Translations } from "@/lib/i18n/en";
 import { recipesService } from "@/services/recipesService";
 import type { Ingredient, Recipe } from "@/types";
 import { formatCurrency, formatPercent } from "@/utils/format";
 import { toast } from "@/utils/toast";
 
-const itemSchema = z.object({
-  ingredientId: z.string().min(1, "Required"),
-  quantity: z.number().positive("Must be greater than 0"),
-});
+function buildSchema(t: Translations) {
+  const itemSchema = z.object({
+    ingredientId: z.string().min(1, t.common.required),
+    quantity: z.number().positive(t.common.mustBeGreaterThanZero),
+  });
 
-const schema = z.object({
-  name: z.string().min(1, "Required"),
-  category: z.string().optional(),
-  sellingPrice: z.number().min(0, "Must be 0 or more"),
-  active: z.boolean(),
-  items: z.array(itemSchema).min(1, "Add at least one ingredient"),
-});
+  return z.object({
+    name: z.string().min(1, t.common.required),
+    category: z.string().optional(),
+    sellingPrice: z.number().min(0, t.common.mustBeZeroOrMore),
+    active: z.boolean(),
+    items: z.array(itemSchema).min(1, t.recipes.itemsRequired),
+  });
+}
 
-type FormValues = z.infer<typeof schema>;
+type FormValues = z.infer<ReturnType<typeof buildSchema>>;
 
 export interface RecipeFormModalProps {
   open: boolean;
@@ -38,8 +42,10 @@ export interface RecipeFormModalProps {
 }
 
 export function RecipeFormModal({ open, onClose, recipe, ingredients }: RecipeFormModalProps) {
+  const { t } = useLanguage();
   const [itemsLoading, setItemsLoading] = useState(false);
   const ingredientsById = useMemo(() => new Map(ingredients.map((i) => [i.id, i])), [ingredients]);
+  const schema = useMemo(() => buildSchema(t), [t]);
 
   const {
     register,
@@ -117,24 +123,29 @@ export function RecipeFormModal({ open, onClose, recipe, ingredients }: RecipeFo
         items,
         ingredientsById,
       );
-      toast.success(recipe ? "Recipe updated." : "Recipe added.");
+      toast.success(recipe ? t.recipes.toastUpdated : t.recipes.toastAdded);
       onClose();
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save recipe.");
+      toast.error(t.recipes.toastSaveFailed);
     }
   }
 
   return (
-    <Modal open={open} onClose={onClose} title={recipe ? "Edit Recipe" : "Add Recipe"} className="sm:max-w-2xl">
+    <Modal open={open} onClose={onClose} title={recipe ? t.recipes.editRecipe : t.recipes.addRecipe} className="sm:max-w-2xl">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Name" placeholder="e.g. Classic Cheeseburger" error={errors.name?.message} {...register("name")} />
-          <Input label="Category" placeholder="e.g. Burgers" {...register("category")} />
+          <Input
+            label={t.recipes.fieldName}
+            placeholder={t.recipes.fieldNamePlaceholder}
+            error={errors.name?.message}
+            {...register("name")}
+          />
+          <Input label={t.recipes.fieldCategory} placeholder={t.recipes.fieldCategoryPlaceholder} {...register("category")} />
         </div>
 
         <Input
-          label="Selling Price"
+          label={t.recipes.fieldSellingPrice}
           type="number"
           step="0.01"
           min={0}
@@ -144,7 +155,7 @@ export function RecipeFormModal({ open, onClose, recipe, ingredients }: RecipeFo
 
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-[var(--color-text-muted)]">Ingredients</span>
+            <span className="text-sm font-medium text-[var(--color-text-muted)]">{t.recipes.ingredientsLabel}</span>
             <Button
               type="button"
               variant="secondary"
@@ -153,7 +164,7 @@ export function RecipeFormModal({ open, onClose, recipe, ingredients }: RecipeFo
               disabled={ingredients.length === 0}
             >
               <Plus className="h-4 w-4" />
-              Add Ingredient
+              {t.recipes.addIngredient}
             </Button>
           </div>
 
@@ -165,7 +176,7 @@ export function RecipeFormModal({ open, onClose, recipe, ingredients }: RecipeFo
             <div className="flex flex-col gap-2">
               {fields.length === 0 && (
                 <p className="rounded-[var(--radius-md)] bg-[var(--color-surface-2)] px-4 py-3 text-sm text-[var(--color-text-muted)]">
-                  No ingredients added yet.
+                  {t.recipes.noItemsYet}
                 </p>
               )}
               {fields.map((field, index) => {
@@ -186,14 +197,14 @@ export function RecipeFormModal({ open, onClose, recipe, ingredients }: RecipeFo
                         type="number"
                         step="0.01"
                         min={0}
-                        placeholder="Qty"
+                        placeholder={t.common.qty}
                         {...register(`items.${index}.quantity` as const, { valueAsNumber: true })}
                       />
                     </div>
                     <span className="mb-2.5 w-10 shrink-0 text-sm text-[var(--color-text-muted)]">
-                      {selectedIngredient?.unit ?? ""}
+                      {selectedIngredient ? t.ingredients.units[selectedIngredient.unit] : ""}
                     </span>
-                    <Button type="button" variant="ghost" size="icon" aria-label="Remove ingredient" onClick={() => remove(index)}>
+                    <Button type="button" variant="ghost" size="icon" aria-label={t.recipes.removeIngredient} onClick={() => remove(index)}>
                       <Trash2 className="h-4 w-4 text-[var(--color-danger)]" />
                     </Button>
                   </div>
@@ -206,32 +217,32 @@ export function RecipeFormModal({ open, onClose, recipe, ingredients }: RecipeFo
 
         <div className="grid grid-cols-3 gap-3 rounded-[var(--radius-md)] bg-[var(--color-surface-2)] px-4 py-3 text-sm">
           <div>
-            <div className="text-[var(--color-text-muted)]">Cost</div>
+            <div className="text-[var(--color-text-muted)]">{t.recipes.cost}</div>
             <div className="font-semibold text-[var(--color-text)]">{formatCurrency(totals.cost)}</div>
           </div>
           <div>
-            <div className="text-[var(--color-text-muted)]">Profit</div>
+            <div className="text-[var(--color-text-muted)]">{t.recipes.profit}</div>
             <div className={`font-semibold ${totals.profit >= 0 ? "text-[var(--color-success)]" : "text-[var(--color-danger)]"}`}>
               {formatCurrency(totals.profit)}
             </div>
           </div>
           <div>
-            <div className="text-[var(--color-text-muted)]">Margin</div>
+            <div className="text-[var(--color-text-muted)]">{t.recipes.margin}</div>
             <div className="font-semibold text-[var(--color-text)]">{formatPercent(totals.margin)}</div>
           </div>
         </div>
 
         <label className="flex items-center gap-2 text-sm text-[var(--color-text)]">
           <input type="checkbox" className="h-4 w-4 accent-[var(--color-primary)]" {...register("active")} />
-          Active (visible on the Sales screen)
+          {t.recipes.active}
         </label>
 
         <div className="mt-2 flex justify-end gap-3">
           <Button type="button" variant="secondary" onClick={onClose} disabled={isSubmitting}>
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button type="submit" loading={isSubmitting}>
-            {recipe ? "Save Changes" : "Add Recipe"}
+            {recipe ? t.recipes.saveChanges : t.recipes.addRecipe}
           </Button>
         </div>
       </form>

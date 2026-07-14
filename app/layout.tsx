@@ -5,6 +5,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { PwaRegister } from "@/components/PwaRegister";
 import { AuthProvider } from "@/features/auth/hooks/useAuth";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -58,11 +59,13 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
-          <AuthProvider>
-            <ErrorBoundary>{children}</ErrorBoundary>
-            <Toaster richColors position="top-right" theme="system" />
-            <PwaRegister />
-          </AuthProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <ErrorBoundary>{children}</ErrorBoundary>
+              <Toaster richColors position="top-right" theme="system" />
+              <PwaRegister />
+            </AuthProvider>
+          </LanguageProvider>
         </ThemeProvider>
       </body>
     </html>

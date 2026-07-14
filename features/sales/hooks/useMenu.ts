@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import { recipesService } from "@/services/recipesService";
 import type { Recipe } from "@/types";
 import { toast } from "@/utils/toast";
 
 export function useMenu() {
+  const { t } = useLanguage();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,11 +19,11 @@ export function useMenu() {
       },
       (error) => {
         console.error("[menu]", error);
-        toast.error("Failed to load menu.");
+        toast.error(t.sales.toastLoadFailed);
       },
     );
     return unsub;
-  }, []);
+  }, [t]);
 
   return { recipes, loading };
 }
