@@ -10,6 +10,12 @@ export function calcRecipeItemCost(ingredient: Pick<Ingredient, "costPerGram">, 
   return ingredient.costPerGram * quantity;
 }
 
+/** How many portioned pieces a given weight yields — e.g. 1500g ÷ 43g/patty ≈ 35 patties. */
+export function calcPieceCount(weight: number, pieceWeight: number | null | undefined): number | null {
+  if (!pieceWeight || pieceWeight <= 0 || !weight) return null;
+  return weight / pieceWeight;
+}
+
 export function calcRecipeCost(items: Pick<RecipeItem, "cost">[]): number {
   return items.reduce((sum, item) => sum + item.cost, 0);
 }

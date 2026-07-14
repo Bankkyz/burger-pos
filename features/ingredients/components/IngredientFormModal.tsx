@@ -13,8 +13,8 @@ import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type { Translations } from "@/lib/i18n/en";
 import { ingredientsService } from "@/services/ingredientsService";
 import type { Ingredient, Supplier } from "@/types";
-import { calcCostPerGram } from "@/utils/calculations";
-import { formatCurrency } from "@/utils/format";
+import { calcCostPerGram, calcPieceCount } from "@/utils/calculations";
+import { formatCurrency, formatNumber } from "@/utils/format";
 import { toast } from "@/utils/toast";
 
 function buildSchema(t: Translations) {
@@ -28,6 +28,7 @@ function buildSchema(t: Translations) {
     minimumStock: z.number().min(0, t.common.mustBeZeroOrMore),
     expireDate: z.string().optional(),
     supplierId: z.string().optional(),
+    pieceWeight: z.number().min(0).optional(),
   });
 }
 
@@ -68,6 +69,7 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
             minimumStock: ingredient.minimumStock,
             expireDate: ingredient.expireDate ?? "",
             supplierId: ingredient.supplierId ?? "",
+            pieceWeight: ingredient.pieceWeight ?? undefined,
           }
         : {
             name: "",
@@ -79,15 +81,20 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
             minimumStock: 0,
             expireDate: "",
             supplierId: "",
+            pieceWeight: undefined,
           },
     );
   }, [open, ingredient, reset]);
 
   const purchasePrice = watch("purchasePrice");
   const purchaseUnitGrams = watch("purchaseUnitGrams");
+  const currentStock = watch("currentStock");
+  const pieceWeight = watch("pieceWeight");
   const watchedUnit = watch("unit");
   const previewCostPerGram = calcCostPerGram(Number(purchasePrice) || 0, Number(purchaseUnitGrams) || 0);
   const unitLabel = t.ingredients.units[watchedUnit] ?? watchedUnit;
+  const purchasePieces = calcPieceCount(Number(purchaseUnitGrams) || 0, pieceWeight);
+  const stockPieces = calcPieceCount(Number(currentStock) || 0, pieceWeight);
 
   async function onSubmit(values: FormValues) {
     const payload = {
@@ -100,6 +107,7 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
       minimumStock: values.minimumStock,
       expireDate: values.expireDate || null,
       supplierId: values.supplierId || null,
+      pieceWeight: values.pieceWeight || null,
     };
 
     try {
@@ -153,14 +161,21 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
             error={errors.purchasePrice?.message}
             {...register("purchasePrice", { valueAsNumber: true })}
           />
-          <Input
-            label={t.ingredients.fieldPurchaseSize(unitLabel)}
-            type="number"
-            step="0.01"
-            min={0}
-            error={errors.purchaseUnitGrams?.message}
-            {...register("purchaseUnitGrams", { valueAsNumber: true })}
-          />
+          <div className="flex flex-col gap-1.5">
+            <Input
+              label={t.ingredients.fieldPurchaseSize(unitLabel)}
+              type="number"
+              step="0.01"
+              min={0}
+              error={errors.purchaseUnitGrams?.message}
+              {...register("purchaseUnitGrams", { valueAsNumber: true })}
+            />
+            {purchasePieces !== null && (
+              <span className="text-xs text-[var(--color-text-muted)]">
+                {t.ingredients.pieceCountHint(formatNumber(purchasePieces, 1))}
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="rounded-[var(--radius-md)] bg-[var(--color-surface-2)] px-4 py-3 text-sm text-[var(--color-text-muted)]">
@@ -168,15 +183,34 @@ export function IngredientFormModal({ open, onClose, ingredient, suppliers }: In
           <span className="font-semibold text-[var(--color-text)]">{formatCurrency(previewCostPerGram)}</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
           <Input
-            label={t.ingredients.fieldCurrentStock}
+            label={t.ingredients.fieldPieceWeight(unitLabel)}
             type="number"
             step="0.01"
             min={0}
-            error={errors.currentStock?.message}
-            {...register("currentStock", { valueAsNumber: true })}
+            placeholder={t.common.optional}
+            {...register("pieceWeight", { valueAsNumber: true })}
           />
+          <span className="text-xs text-[var(--color-text-muted)]">{t.ingredients.fieldPieceWeightHint}</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Input
+              label={t.ingredients.fieldCurrentStock}
+              type="number"
+              step="0.01"
+              min={0}
+              error={errors.currentStock?.message}
+              {...register("currentStock", { valueAsNumber: true })}
+            />
+            {stockPieces !== null && (
+              <span className="text-xs text-[var(--color-text-muted)]">
+                {t.ingredients.pieceCountHint(formatNumber(stockPieces, 1))}
+              </span>
+            )}
+          </div>
           <Input
             label={t.ingredients.fieldMinimumStock}
             type="number"

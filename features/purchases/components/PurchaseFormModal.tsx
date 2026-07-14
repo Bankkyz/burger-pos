@@ -15,7 +15,8 @@ import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type { Translations } from "@/lib/i18n/en";
 import { purchasesService } from "@/services/purchasesService";
 import type { Ingredient, Supplier } from "@/types";
-import { formatCurrency } from "@/utils/format";
+import { calcPieceCount } from "@/utils/calculations";
+import { formatCurrency, formatNumber } from "@/utils/format";
 import { toast } from "@/utils/toast";
 
 function buildSchema(t: Translations) {
@@ -137,9 +138,10 @@ export function PurchaseFormModal({ open, onClose, suppliers, ingredients }: Pur
               const ingredient = ingredientsById.get(watchedItems?.[index]?.ingredientId ?? "");
               const qty = Number(watchedItems?.[index]?.quantity) || 0;
               const price = Number(watchedItems?.[index]?.unitPrice) || 0;
+              const pieces = calcPieceCount(qty, ingredient?.pieceWeight);
               return (
-                <div key={field.id} className="flex items-end gap-2">
-                  <div className="flex-1">
+                <div key={field.id} className="flex items-start gap-2">
+                  <div className="flex-1 pt-0">
                     <Select {...register(`items.${index}.ingredientId` as const)}>
                       {ingredients.map((ing) => (
                         <option key={ing.id} value={ing.id}>
@@ -148,10 +150,13 @@ export function PurchaseFormModal({ open, onClose, suppliers, ingredients }: Pur
                       ))}
                     </Select>
                   </div>
-                  <div className="w-24">
+                  <div className="flex w-24 flex-col gap-1">
                     <Input type="number" step="0.01" min={0} placeholder={t.common.qty} {...register(`items.${index}.quantity` as const, { valueAsNumber: true })} />
+                    {pieces !== null && (
+                      <span className="text-xs leading-tight text-[var(--color-text-muted)]">{t.ingredients.pieceCountHint(formatNumber(pieces, 1))}</span>
+                    )}
                   </div>
-                  <span className="mb-2.5 w-8 shrink-0 text-sm text-[var(--color-text-muted)]">
+                  <span className="w-8 shrink-0 pt-2.5 text-sm text-[var(--color-text-muted)]">
                     {ingredient ? t.ingredients.units[ingredient.unit] : ""}
                   </span>
                   <div className="w-24">
@@ -163,7 +168,7 @@ export function PurchaseFormModal({ open, onClose, suppliers, ingredients }: Pur
                       {...register(`items.${index}.unitPrice` as const, { valueAsNumber: true })}
                     />
                   </div>
-                  <span className="mb-2.5 w-16 shrink-0 text-right text-sm font-medium text-[var(--color-text)]">
+                  <span className="w-16 shrink-0 pt-2.5 text-right text-sm font-medium text-[var(--color-text)]">
                     {formatCurrency(qty * price)}
                   </span>
                   <Button type="button" variant="ghost" size="icon" aria-label={t.purchases.removeItem} onClick={() => remove(index)}>

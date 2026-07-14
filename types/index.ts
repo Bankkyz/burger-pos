@@ -47,6 +47,13 @@ export interface Ingredient extends BaseDoc {
   expireDate?: string | null; // ISO date
   supplierId?: string | null;
   costPerGram: number; // auto-calculated: purchasePrice / purchaseUnitGrams
+  /**
+   * Weight (in the ingredient's own unit, e.g. grams) of a single portioned
+   * piece — e.g. one burger patty. Purely a conversion helper: lets the UI
+   * show "≈35 pieces" whenever a weight is entered (purchases, stock),
+   * without changing how stock/cost is actually tracked (always by weight).
+   */
+  pieceWeight?: number | null;
 }
 
 export interface RecipeItem {

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/Button";
 import type { Ingredient, Supplier } from "@/types";
 import { useLanguage } from "@/lib/i18n/LanguageProvider";
 import type { Translations } from "@/lib/i18n/en";
+import { calcPieceCount } from "@/utils/calculations";
 import { formatCurrency, formatDate, formatNumber } from "@/utils/format";
 import { cn } from "@/utils/cn";
 
@@ -16,18 +17,24 @@ export interface IngredientsTableProps {
 function StockBadge({ ingredient, t }: { ingredient: Ingredient; t: Translations }) {
   const isOut = ingredient.currentStock <= 0;
   const isLow = !isOut && ingredient.currentStock <= ingredient.minimumStock;
+  const pieces = calcPieceCount(ingredient.currentStock, ingredient.pieceWeight);
 
   return (
-    <span
-      className={cn(
-        "rounded-full px-2.5 py-1 text-xs font-semibold",
-        isOut && "bg-[var(--color-danger)]/10 text-[var(--color-danger)]",
-        isLow && "bg-[var(--color-warning)]/10 text-[var(--color-warning)]",
-        !isOut && !isLow && "bg-[var(--color-success)]/10 text-[var(--color-success)]",
+    <div className="flex flex-col gap-0.5">
+      <span
+        className={cn(
+          "w-fit rounded-full px-2.5 py-1 text-xs font-semibold",
+          isOut && "bg-[var(--color-danger)]/10 text-[var(--color-danger)]",
+          isLow && "bg-[var(--color-warning)]/10 text-[var(--color-warning)]",
+          !isOut && !isLow && "bg-[var(--color-success)]/10 text-[var(--color-success)]",
+        )}
+      >
+        {formatNumber(ingredient.currentStock)} {t.ingredients.units[ingredient.unit]}
+      </span>
+      {pieces !== null && (
+        <span className="text-xs text-[var(--color-text-muted)]">{t.ingredients.pieceCountHint(formatNumber(pieces, 1))}</span>
       )}
-    >
-      {formatNumber(ingredient.currentStock)} {t.ingredients.units[ingredient.unit]}
-    </span>
+    </div>
   );
 }
 
