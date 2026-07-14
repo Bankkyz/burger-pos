@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Single predefined admin account — mirrors NEXT_PUBLIC_ADMIN_EMAIL.
+    // Update this value if the admin account ever changes.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == "admin@example.com";
+    }
+
+    // Every collection in this system is only readable/writable by the single
+    // admin account. There is no multi-tenant or public-facing data.
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
